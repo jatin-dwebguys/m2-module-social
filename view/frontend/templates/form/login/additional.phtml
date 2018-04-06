@@ -1,0 +1,8 @@
+<div class="actions">
+    <?php if ($block->getConfig()->getServiceAvailable('facebook')) : ?>
+    <a href="<?= $block->getConfig()->getServiceLoginUrl('facebook') ?>" class="action primary"><?= sprintf(__('Login with %s'), 'Facebook') ?></a>
+    <?php endif ?>
+    <?php if ($block->getConfig()->getServiceAvailable('google')) : ?>
+    <a href="<?= $block->getConfig()->getServiceLoginUrl('google') ?>" class="action primary"><?= sprintf(__('Login with %s'), 'Google') ?></a>
+    <?php endif ?>
+</div>

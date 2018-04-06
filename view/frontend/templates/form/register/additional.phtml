@@ -1,0 +1,8 @@
+<div class="actions-toolbar">
+    <?php if ($block->getConfig()->getServiceAvailable('facebook')) : ?>
+    <a href="<?= $block->getConfig()->getServiceRegisterUrl('facebook') ?>" class="action primary"><?= sprintf(__('Sign Up with %s'), 'Facebook') ?></a>
+    <?php endif ?>
+    <?php if ($block->getConfig()->getServiceAvailable('google')) : ?>
+    <a href="<?= $block->getConfig()->getServiceRegisterUrl('google') ?>" class="action primary"><?= sprintf(__('Sign Up with %s'), 'Google') ?></a>
+    <?php endif ?>
+</div>

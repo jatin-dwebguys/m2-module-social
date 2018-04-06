@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\App\RouterList">
+        <arguments>
+            <argument name="routerList" xsi:type="array">
+                <item name="loganstellway_social" xsi:type="array">
+                    <item name="class" xsi:type="string">LoganStellway\Social\Controller\Router</item>
+                    <item name="disable" xsi:type="boolean">false</item>
+                    <item name="sortOrder" xsi:type="string">70</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Customer\Controller\Account\LogoutSuccess">
+        <plugin name="loganstellway_social_logout_clear_data" type="LoganStellway\Social\Plugin\Customer\LogoutSuccessPlugin"/>
+    </type>
+    <type name="Magento\Checkout\Block\Onepage">
+        <plugin name="loganstellway_social_checkout_onepage_layout" type="LoganStellway\Social\Plugin\Checkout\Block\OnepagePlugin"/>
+    </type>
+    <type name="Magento\Customer\Block\Account\AuthenticationPopup">
+        <plugin name="loganstellway_social_authentication_popup_layout" type="LoganStellway\Social\Plugin\Customer\AuthenticationPopupPlugin"/>
+    </type>
+</config>

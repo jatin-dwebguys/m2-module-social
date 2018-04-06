@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <referenceContainer name="form.additional.info">
+        <block class="LoganStellway\Social\Block\Form" name="form_social_login_methods" template="LoganStellway_Social::form/login/additional.phtml"/>
+    </referenceContainer>
+    <referenceBlock name="customer.new" template="LoganStellway_Social::newcustomer.phtml">
+        <container name="form.newcustomer.additional">
+            <block class="LoganStellway\Social\Block\Form" name="form_social_register_methods" template="LoganStellway_Social::form/register/additional.phtml"/>
+        </container>
+    </referenceBlock>
+</page>

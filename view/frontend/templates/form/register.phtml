@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * @var $block \LoganStellway\Social\Block\Form
+ */
+
+$data = new \Magento\Framework\DataObject(
+    $block->getSession()->getSocialData()
+);
+
+$_dob = $block->getLayout()->createBlock('Magento\Customer\Block\Widget\Dob');
+
+?>
+<form action="<?= $block->getUrl('social/register') ?>" method="post">
+    <?= /* @noEscape */ $block->getBlockHtml('formkey'); ?>
+    <?= $block->getLayout()->createBlock('Magento\Customer\Block\Widget\Name')->setObject($data)->setForceUseCustomerAttributes(true)->toHtml() ?>
+
+    <div class="field required">
+        <label for="email_address" class="label"><span><?= $block->escapeHtml(__('Email')) ?></span></label>
+        <div class="control">
+            <input type="email" name="email" autocomplete="email" id="email_address" value="<?= $block->escapeHtmlAttr($data->getEmail()) ?>" title="<?= $block->escapeHtmlAttr(__('Email')) ?>" class="input-text" data-validate="{required:true, 'validate-email':true}">
+        </div>
+    </div>
+
+    <?php if ($_dob->isEnabled()): ?>
+        <?= $_dob->setDate($data->getDob())->toHtml() ?>
+    <?php endif ?>
+
+    <div class="actions">
+        <button type="submit" class="action primary"><span><?= __('Submit') ?></span></button>
+    </div>
+</form>
+
+<script>
+require([
+    'jquery',
+    'mage/mage'
+], function($){
+    var dataForm = $('#form-validate');
+    var ignore = <?= /* @noEscape */ $_dob->isEnabled() ? '\'input[id$="full"]\'' : 'null' ?>;
+
+    dataForm.mage('validation', {
+    <?php if ($_dob->isEnabled()): ?>
+        errorPlacement: function(error, element) {
+            if (element.prop('id').search('full') !== -1) {
+                var dobElement = $(element).parents('.customer-dob'),
+                    errorClass = error.prop('class');
+                error.insertAfter(element.parent());
+                dobElement.find('.validate-custom').addClass(errorClass)
+                    .after('<div class="' + errorClass + '"></div>');
+            }
+            else {
+                error.insertAfter(element);
+            }
+        },
+        ignore: ':hidden:not(' + ignore + ')'
+    <?php else: ?>
+        ignore: ignore ? ':hidden:not(' + ignore + ')' : ':hidden'
+    <?php endif ?>
+    }).find('input:text').attr('autocomplete', 'off');
+
+});
+</script>
