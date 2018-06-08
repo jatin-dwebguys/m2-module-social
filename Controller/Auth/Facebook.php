@@ -20,10 +20,12 @@ class Facebook extends AbstractAuth
 
             // Fetch profile info
             $data = new \Magento\Framework\DataObject(
-                json_decode($this->service->request('/me'), true)
+                json_decode($this->service->request('/me?fields=name,first_name,last_name,middle_name,email'), true)
             );
             $data->setServiceName($this->getServiceName());
             $data->setUserId($data->getId());
+            $data->setFirstname($data->getFirstName());
+            $data->setLastname($data->getLastName());
 
             return $this->_auth($data);
         } elseif($error = $this->getRequest()->getParam('error')) {
