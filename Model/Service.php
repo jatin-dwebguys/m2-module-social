@@ -73,14 +73,16 @@ class Service
      * @param  string $service
      * @return \OAuth\OAuth2\Service\ServiceInterface
      */
-    public function getService(string $service)
+    public function getService(string $service, string $baseApiUri = null, $apiVersion = '')
     {
         if ($this->_config->getServiceAvailable($service)) {
             return $this->_serviceFactory->createService(
                 $service,
                 $this->getCredentials($service),
                 $this->_sessionFactory->create(),
-                $this->_config->getServiceScopes($service)
+                $this->_config->getServiceScopes($service),
+                $baseApiUri,
+                $apiVersion
             );
         }
 
