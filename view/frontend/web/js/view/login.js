@@ -11,7 +11,7 @@ define([
     };
 
     s.url = function(method, key) {
-        if (typeof method[key]) {
+        if (typeof method[key] !== 'undefined') {
             return method[key] + '?redirect_url=' + encodeURIComponent(window.checkout.checkoutUrl || window.checkoutConfig.checkoutUrl || '')
         }
         return false;
