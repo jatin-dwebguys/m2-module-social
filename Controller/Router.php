@@ -15,6 +15,16 @@ use Magento\Framework\App\RequestInterface;
 class Router implements \Magento\Framework\App\RouterInterface
 {
     /**
+     * @var array
+     */
+    protected $_validRoutes = [
+        'login',
+        'register',
+        'connect',
+        'disconnect'
+    ];
+
+    /**
      * @var ActionFactory
      */
     protected $_actionFactory;
@@ -47,7 +57,7 @@ class Router implements \Magento\Framework\App\RouterInterface
         $identifier = trim($request->getPathInfo(), '/');
         $service = explode('/', $identifier);
 
-        if (isset($service[2]) && $service[2] !== 'index' && in_array($service[1], ['login','register'])) {
+        if (isset($service[2]) && $service[2] !== 'index' && in_array($service[1], $this->_validRoutes)) {
             $request->setModuleName('social')->setControllerName('auth')->setActionName('index')->setParam(
                 'service',
                 $service[2]
