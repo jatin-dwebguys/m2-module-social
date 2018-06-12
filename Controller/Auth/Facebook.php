@@ -13,10 +13,11 @@ class Facebook extends AbstractAuth
     public function auth()
     {
         if ($code = $this->getRequest()->getParam('code')) {
-            $token = $this->service->requestAccessToken(
-                $code,
-                $this->getRequest()->getParam('state') // CSRF state
-            );
+            // Retrieve access token
+            if (!$token = $this->getAccessToken($code, $this->getRequest()->getParam('state'))) {
+                $this->addMessage(__('An error occurred while authenticating your account.'));
+                return $this->_redirect('customer/account');
+            }
 
             // Fetch profile info
             $data = new \Magento\Framework\DataObject(
@@ -29,7 +30,7 @@ class Facebook extends AbstractAuth
 
             return $this->_auth($data);
         } elseif($error = $this->getRequest()->getParam('error')) {
-            $this->addError(__('We could not log you in.'));
+            $this->addMessage(__('We could not log you in.'));
             return $this->_redirect('customer/account');
         } else {
             return $this->redirect($this->service->getAuthorizationUri(), true);

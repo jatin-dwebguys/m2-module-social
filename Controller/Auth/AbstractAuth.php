@@ -15,7 +15,7 @@ use Magento\Framework\Stdlib\Cookie\PhpCookieManager;
 use LoganStellway\Social\Helper\Config;
 use LoganStellway\Social\Model\Service;
 use LoganStellway\Social\Model\Session;
-use LoganStellway\Social\Model\Customer;
+use LoganStellway\Social\Model\CustomerFactory;
 
 /**
  * Abstract Authorization Action
@@ -53,24 +53,9 @@ abstract class AbstractAuth extends Action implements AuthInterface
     protected $_customerSession;
 
     /**
-     * @var Customer
+     * @var CustomerFactory
      */
-    protected $_customer;
-
-    /**
-     * Error messages
-     * @var array
-     */
-    protected $errors = [
-        'login' => [
-            'general' => 'An error occurred while logging you in.',
-            'no_customer' => 'No associated account could be found.'
-        ],
-        'register' => [
-            'general' => 'An error occurred while creating your account.',
-            'no_customer' => 'An error occurred while creating your account.'
-        ],
-    ];
+    protected $_customerFactory;
 
     /**
      * @param Context         $context
@@ -86,7 +71,7 @@ abstract class AbstractAuth extends Action implements AuthInterface
         Config $config,
         Service $service,
         Session $customerSession,
-        Customer $customer
+        CustomerFactory $customerFactory
     ) {
         parent::__construct($context);
 
@@ -94,7 +79,7 @@ abstract class AbstractAuth extends Action implements AuthInterface
         $this->_config = $config;
         $this->_service = $service;
         $this->_customerSession = $customerSession;
-        $this->_customer = $customer;
+        $this->_customerFactory = $customerFactory;
     }
 
     /**
@@ -154,24 +139,33 @@ abstract class AbstractAuth extends Action implements AuthInterface
     }
 
     /**
-     * Get Error message
+     * Get access token
+     * @param  string $code
+     * @param  string $state
+     * @return string|boolean
+     */
+    public function getAccessToken($code, $state = null)
+    {
+        try {
+            $token = $this->service->requestAccessToken($code, $state);
+            return $token;
+        } catch (\Exception $e) {
+            $this->addMessage($e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Add global message
      * @param  string $key
      * @return string|null
      */
-    protected function addError($message = '', $key = false)
+    protected function addMessage($message = '', $type = MessageInterface::TYPE_ERROR)
     {
-        if ($key) {
-            $action = $this->_customerSession->getSocialAction();
-
-            if (isset($this->errors[$action]) && isset($this->errors[$action][$key])) {
-                $message = __($this->errors[$action][$key]);
-            }
-        }
-
         if ($message) {
             $this->messageManager->addUniqueMessages([
                 $this->messageManager->createMessage(
-                    MessageInterface::TYPE_ERROR
+                    $type
                 )->setText($message)
             ]);
         }
@@ -203,7 +197,10 @@ abstract class AbstractAuth extends Action implements AuthInterface
         // $this->_customerSession->unsSocialAction();
 
         if ($data->getUserId()) {
-            $user = $this->_customer->loadByIdType(
+            // Connect or disconnect account
+            if ($this->_customerSession->getSocialAction() == 'connect') return $this->connect();
+
+            $user = $this->_customerFactory->create()->loadByIdType(
                 $data->getUserId(),
                 $data->getServiceName()
             );
@@ -221,7 +218,7 @@ abstract class AbstractAuth extends Action implements AuthInterface
                         ['account_controller' => $this, 'customer' => $customer]
                     );
                 } catch (\Exception $e) {
-                    $this->addError(__($e->getMessage()));
+                    $this->addMessage(__($e->getMessage()));
                     return $this->_redirect('*/register');
                 }
             }
@@ -236,11 +233,11 @@ abstract class AbstractAuth extends Action implements AuthInterface
                 $this->_customerSession->regenerateId();
                 $this->_customerSession->setCustomerAsLoggedIn($customer);
             } else {
-                $this->addError(null, 'no_customer');
+                $this->addMessage(__('No associated account could be found.'));
                 return $this->_redirect('*/register');
             }
         } else {
-            $this->addError(null, 'general');
+            $this->addMessage(__('An error occurred while logging you in.'));
             return $this->_redirect('customer/account/login');
         }
 
@@ -253,6 +250,93 @@ abstract class AbstractAuth extends Action implements AuthInterface
     }
 
     /**
+     * Connect social account
+     * @return \Magento\Framework\App\ResponseInterface
+     */
+    protected function connect()
+    {
+        // Redirect if not logged in
+        if (!$this->_customerSession->isLoggedIn()) {
+            return $this->_redirect('customer/account');
+        }
+
+        $name = $this->service->service();
+        $data = new \Magento\Framework\DataObject(
+            $this->_customerSession->getSocialData()
+        );
+
+        $customer = $this->_customerFactory->create()->load(
+            $data->getUserId(),
+            'user_id'
+        );
+
+        // Check if account is already being used
+        if (!$customer->getId()) {
+            $customer = $this->_customerFactory->create();
+
+            try {
+                $customer->setData([
+                    'customer_id' => $this->_customerSession->getCustomer()->getId(),
+                    'user_id' => $data->getUserId(),
+                    'type' => $this->getServiceName(),
+                ])->save();
+
+                $this->addMessage(
+                    sprintf(__('You have successfully connected your %s account.'), $name),
+                    MessageInterface::TYPE_SUCCESS
+                );
+            } catch (\Exception $e) {
+                $customer->unsData()->delete();
+                $this->addMessage(
+                    sprintf(__('An error occurred while connecting your %s account.'), $name)
+                );
+            }
+        } else {
+            $this->addMessage(
+                sprintf(__('The requested %s account is already in use.'), $name)
+            );
+        }
+
+        return $this->_redirect('*/accounts');
+    }
+
+    /**
+     * Disconnect social account
+     * @return \Magento\Framework\App\ResponseInterface
+     */
+    protected function disconnect()
+    {
+        // Redirect if not logged in
+        if (!$this->_customerSession->isLoggedIn()) {
+            return $this->_redirect('customer/account');
+        }
+
+        $name = $this->service->service();
+        $data = new \Magento\Framework\DataObject(
+            $this->_customerSession->getSocialData()
+        );
+
+        // Delete customer entry
+        try {
+            $this->_customerFactory->create()->loadByCustomerIdType(
+                $this->_customerSession->getCustomer()->getId(),
+                $this->getServiceName()
+            )->delete();
+
+            $this->addMessage(
+                sprintf(__('You have successfully disconnected your %s account.'), $name),
+                MessageInterface::TYPE_SUCCESS
+            );
+        } catch (\Exception $e) {
+            $this->addMessage(
+                sprintf(__('An error occurred while disconnecting your %s account.'), $name)
+            );
+        }
+
+        return $this->_redirect('*/accounts');
+    }
+
+    /**
      * Authorize service
      */
     public function execute()
@@ -262,6 +346,9 @@ abstract class AbstractAuth extends Action implements AuthInterface
             if ($action = $this->getRequest()->getParam('action')) {
                 $this->_customerSession->setSocialAction($action);
             }
+
+            // Connect or disconnect account
+            if ($this->_customerSession->getSocialAction() == 'disconnect') return $this->disconnect();
 
             if ($this->getRequest()->getParam('continue')) {
                 return $this->_auth(
