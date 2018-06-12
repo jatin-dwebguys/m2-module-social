@@ -1,0 +1,13 @@
+<?php
+/** @var $block \LoganStellway\Social\Block\Customer */
+
+foreach($block->getConfig()->getEnabledServices() as $service) : ?>
+<div class="social-account-item">
+    <h2><?= $block->getConfig()->getServiceName($service) ?></h2>
+    <?php if ($block->isConnected($service)) : ?>
+        <a href="<?= $block->getConfig()->getServiceDisconnectUrl($service) ?>" class="action"><?= __('Disonnect') ?></a>
+    <?php else: ?>
+        <a href="<?= $block->getConfig()->getServiceConnectUrl($service) ?>" class="action"><?= __('Connect') ?></a>
+    <?php endif ?>
+</div>
+<?php endforeach ?>
