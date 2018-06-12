@@ -59,6 +59,21 @@ class Customer extends \Magento\Framework\Model\AbstractModel
     }
 
     /**
+     * Get social customer entity by Customer ID and Type
+     * @param int $customerId
+     * @param string $type
+     * @return \LoganStellway\Social\Model\Customer
+     */
+    public function loadByCustomerIdType($customerId, $type)
+    {
+        return $this->getCollection()->addFieldToFilter(
+            'customer_id', $customerId
+        )->addFieldToFilter(
+            'type', $type
+        )->getFirstItem();
+    }
+
+    /**
      * Get customer model by customer social account
      * 
      * @param int|string $id
@@ -118,8 +133,8 @@ class Customer extends \Magento\Framework\Model\AbstractModel
             if ($customer->getId()) {
                 $this->setData([
                     'customer_id' => $customer->getId(),
-                    'user_id' => $data['user_id'],
-                    'type' => $data['service_name'],
+                    'user_id' => $data->getUserId(),
+                    'type' => $data->getServiceName(),
                 ])->save();
             }
         } catch (\Exception $e) {
