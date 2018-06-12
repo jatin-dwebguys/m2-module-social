@@ -19,6 +19,43 @@ class Config extends AbstractHelper
     const CONFIG_PREFIX = 'loganstellway_social/';
 
     /**
+     * Available services
+     * @var array
+     */
+    protected $_availableServices = [
+        'facebook' => 'Facebook',
+        'google' => 'Google'
+    ];
+
+    /**
+     * Get available services
+     * @return array
+     */
+    public function getEnabledServices()
+    {
+        $services = [];
+        foreach ($this->_availableServices as $service => $name) {
+            if ($this->getServiceEnabled($service)) {
+                $services[] = $service;
+            }
+        }
+        return $services;
+    }
+
+    /**
+     * Get service proper name
+     * @param  string  $service
+     * @return string
+     */
+    public function getServiceName($service)
+    {
+        if (isset($this->_availableServices[$service])) {
+            return $this->_availableServices[$service];
+        }
+        return '';
+    }
+
+    /**
      * Get config value
      * @param  string $field
      * @param  int.   $storeId
@@ -66,6 +103,24 @@ class Config extends AbstractHelper
     public function getServiceRegisterUrl(string $service)
     {
         return $this->_getUrl('social/register/' . trim(strtolower($service)));
+    }
+
+    /**
+     * Get service connect URL
+     * @param  string $service
+     */
+    public function getServiceConnectUrl(string $service)
+    {
+        return $this->_getUrl('social/connect/' . trim(strtolower($service)));
+    }
+
+    /**
+     * Get service disconnect URL
+     * @param  string $service
+     */
+    public function getServiceDisconnectUrl(string $service)
+    {
+        return $this->_getUrl('social/disconnect/' . trim(strtolower($service)));
     }
 
     /**
