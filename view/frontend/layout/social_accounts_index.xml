@@ -12,6 +12,6 @@
     </referenceBlock>
 
     <referenceContainer name="content">
-        <block class="LoganStellway\Social\Block\Customer" name="lssocial_manage_accounts" template="LoganStellway_Social::customer/accounts.phtml"/>
+        <block class="LoganStellway\Social\Block\Customer" name="lssocial_manage_accounts" template="LoganStellway_Social::customer/accounts.phtml" cacheable="false"/>
     </referenceContainer>
 </page>

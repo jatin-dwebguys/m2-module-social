@@ -7,6 +7,6 @@
     </referenceBlock>
 
     <referenceContainer name="content">
-        <block class="LoganStellway\Social\Block\Form" name="social_registration_form" template="LoganStellway_Social::form/register.phtml"/>
+        <block class="LoganStellway\Social\Block\Form" name="social_registration_form" template="LoganStellway_Social::form/register.phtml" cacheable="false"/>
     </referenceContainer>
 </page>
